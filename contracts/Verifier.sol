@@ -142,7 +142,28 @@ contract Verifier {
         ) 
         if (!pairing) { return 4; }
 
-        pairing = Pairing.pairingProd3(
+            pairing = Pairing.pairingProd2(
+                proof.C, 
+                vk.C, 
+                Pairing.negate(proof.C_p), 
+                Pairing.P2()
+            );
+            if (!pairing) { return 3; }
+
+
+            pairing = Pairing.pairingProd3(
+                proof.K, 
+                vk.gamma,
+                Pairing.negate(
+                    Pairing.add(vk_x, Pairing.add(proof.A, proof.C))
+                ), 
+                vk.gammaBeta2,
+                Pairing.negate(vk.gammaBeta1), 
+                proof.B
+            ); 
+            if (!pairing) { return 4; }
+
+            pairing = Pairing.pairingProd3(
                 Pairing.add(vk_x, proof.A), 
                 proof.B,
                 Pairing.negate(proof.H), 
@@ -155,7 +176,10 @@ contract Verifier {
         return 0;
     }
 
-    function verifyTx(
+            return 0;
+        }
+
+        function verifyTx(
             uint[2] a,
             uint[2] a_p,
             uint[2][2] b,
@@ -165,7 +189,7 @@ contract Verifier {
             uint[2] h,
             uint[2] k,
             uint[] input
-    ) 
+        ) 
         returns (bool) 
     {
         Proof memory proof;
@@ -183,12 +207,5 @@ contract Verifier {
             inputValues[i] = input[i];
         }
 
-        if (verify(inputValues, proof) == 0) {
-            emit Verified("Transaction successfully verified.");
-            return true;
-        } else {
-            return false;
-        }
-
-    } 
+        } 
 }
