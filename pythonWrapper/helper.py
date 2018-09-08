@@ -28,7 +28,7 @@ from ctypes import cdll
 import ctypes as c
 
 import sys
-sys.path.insert(0, '../pythonWrapper')
+sys.path.insert(0, '/root/roll_up/pythonWrapper')
 import utils 
 from utils import libsnark2python
 

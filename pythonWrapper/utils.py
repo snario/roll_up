@@ -22,7 +22,7 @@ import pdb
 import hashlib 
 
 import sys
-sys.path.insert(0, "../depends/baby_jubjub_ecc/tests")
+sys.path.insert(0, "/root/roll_up/depends/baby_jubjub_ecc/tests")
 
 import ed25519 as ed
 
