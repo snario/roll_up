@@ -17,9 +17,9 @@
     along with roll_up.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-pragma solidity ^0.4.19;
+pragma solidity ^0.4.24;
 
-import "../contracts/Verifier.sol";
+import "./Verifier.sol";
 
 
 contract roll_up {
@@ -34,14 +34,14 @@ contract roll_up {
     }
 
     function isTrue (
-            uint[2] a,
-            uint[2] a_p,
-            uint[2][2] b,
-            uint[2] b_p,
-            uint[2] c,
-            uint[2] c_p,
-            uint[2] h,
-            uint[2] k,
+            uint[2] A,
+            uint[2] A_p,
+            uint[2][2] B,
+            uint[2] B_p,
+            uint[2] C,
+            uint[2] C_p,
+            uint[2] H,
+            uint[2] K,
             uint[] input
     ) 
         returns (bool) 
@@ -50,8 +50,8 @@ contract roll_up {
         bytes32 _root = padZero(reverse(bytes32(input[0]))); 
         require(_root == padZero(root));
         require(zksnark_verify.verifyTx(
-            a, a_p, b, b_p, c, c_p, h, k, input)
-        );      
+            A, A_p, B, B_p, C, C_p, H, K, input)
+        );
         root = padZero(reverse(bytes32(input[2])));
         return true;
     }
