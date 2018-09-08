@@ -4,23 +4,25 @@ pragma solidity ^0.4.24;
 
 import "../contracts/Pairing.sol";
 
-
 contract Verifier {
     using Pairing for *;
     event Verified(string);
-    uint sealed = 0; //IC parameater add counter.
-    uint i = 0;
+    uint sealed = 0; // IC parameter add counter.
 
     struct VerifyingKey {
         Pairing.G2Point A;
         Pairing.G1Point B;
         Pairing.G2Point C;
+
         Pairing.G2Point gamma;
         Pairing.G1Point gammaBeta1;
         Pairing.G2Point gammaBeta2;
+
         Pairing.G2Point Z;
-        Pairing.G1Point[] IC;
+
+        Pairing.G1Point[] IC; // IC is an array of (x,y) points on G1
     }
+
     struct Proof {
         Pairing.G1Point A;
         Pairing.G1Point A_p;
@@ -34,44 +36,56 @@ contract Verifier {
 
     VerifyingKey verifyKey;
 
-    function Verifier (uint[2] A1, uint[2] A2, uint[2] B, uint[2] C1, uint[2] C2, 
-                       uint[2] gamma1, uint[2] gamma2, uint[2] gammaBeta1, 
-                       uint[2] gammaBeta2_1, uint[2] gammaBeta2_2, uint[2] Z1, uint[2] Z2,
-                       uint[] input) {
+    // Initialize parameters of the verifier. All generated from libsnark, we
+    // pass them from the generated json file (`contract_deploy.py`)
+    // Docs on why verifyKey is constructed like that?
+    constructor (
+        uint[2] A1, 
+        uint[2] A2, 
+        uint[2] B, 
+        uint[2] C1, 
+        uint[2] C2,
+        uint[2] gamma1,
+        uint[2] gamma2,
+        uint[2] gammaBeta1, 
+        uint[2] gammaBeta2_1,
+        uint[2] gammaBeta2_2,
+        uint[2] Z1,
+        uint[2] Z2) 
+    {
+        // A.X = A1, A.Y = A2
         verifyKey.A = Pairing.G2Point(A1,A2);
+        // B.X = B[0], B.Y = B[1]
         verifyKey.B = Pairing.G1Point(B[0], B[1]);
+        // C.X = C1, C.Y = C2
         verifyKey.C = Pairing.G2Point(C1, C2);
-        verifyKey.gamma = Pairing.G2Point(gamma1, gamma2);
 
+        verifyKey.gamma = Pairing.G2Point(gamma1, gamma2);
         verifyKey.gammaBeta1 = Pairing.G1Point(gammaBeta1[0], gammaBeta1[1]);
         verifyKey.gammaBeta2 = Pairing.G2Point(gammaBeta2_1, gammaBeta2_2);
         verifyKey.Z = Pairing.G2Point(Z1,Z2);
-
-        /*while (verifyKey.IC.length != input.length/2) {
-            verifyKey.IC.push(Pairing.G1Point(input[i], input[i+1]));
-            i += 2;
-        }*/
-
     }
 
-
-   function addIC(uint[] input) {  
-        require(sealed ==0);
+    // Can probably remove the msg.gas checks, the sealed precondition is just
+    // to make sure that the addIC successfully adds everything and doesnt fail
+    function addIC(uint[] input) {  
+        require(sealed == 0);
         while (verifyKey.IC.length != input.length/2 && msg.gas > 200000) {
+            // Input is of the form (input[i], input[i+1]) where each pair is a
+            // G1 Point
             verifyKey.IC.push(Pairing.G1Point(input[i], input[i+1]));
             i += 2;
         } 
-       if (verifyKey.IC.length == input.length/2) {
+        if (verifyKey.IC.length == input.length / 2) {
             sealed = 1;
-       }
-   } 
-
+        }
+    }
 
    function getIC(uint i) returns(uint, uint) {
        return(verifyKey.IC[i].X, verifyKey.IC[i].Y);
    }
 
-   function getICLen () returns (uint) { 
+   function getICLen() returns (uint) { 
         return(verifyKey.IC.length);
    } 
 
@@ -79,11 +93,13 @@ contract Verifier {
         VerifyingKey memory vk = verifyKey;
         require(input.length + 1 == vk.IC.length);
 
-
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
         for (uint i = 0; i < input.length; i++) {
-            vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[i + 1], input[i]));
+            vk_x = Pairing.add(
+                vk_x, 
+                Pairing.mul(vk.IC[i + 1], input[i])
+            );
         }
         vk_x = Pairing.add(vk_x, vk.IC[0]);
 
@@ -124,7 +140,7 @@ contract Verifier {
             Pairing.negate(vk.gammaBeta1), 
             proof.B
         ) 
-        if (!pairing) return 4;
+        if (!pairing) { return 4; }
 
         pairing = Pairing.pairingProd3(
                 Pairing.add(vk_x, proof.A), 
@@ -135,6 +151,7 @@ contract Verifier {
                 Pairing.P2()
         )
         if (!pairing) { return 5; } 
+
         return 0;
     }
 
@@ -160,6 +177,7 @@ contract Verifier {
         proof.C_p = Pairing.G1Point(c_p[0], c_p[1]);
         proof.H = Pairing.G1Point(h[0], h[1]);
         proof.K = Pairing.G1Point(k[0], k[1]);
+
         uint[] memory inputValues = new uint[](input.length);
         for (uint i = 0; i < input.length; i++) {
             inputValues[i] = input[i];
