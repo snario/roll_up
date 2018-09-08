@@ -122,7 +122,7 @@ if __name__ == "__main__":
         leaves[j-1].append(old_leaf[j-1])
 
         address.append(0)
-    
+
     # Get zk proof and merkle root
     proof, root = genWitness(leaves, pub_x, pub_y, address, tree_depth, 
                                 rhs_leaf, new_leaf , R_x, R_y, S)              
