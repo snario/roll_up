@@ -122,17 +122,10 @@ if __name__ == "__main__":
         leaves[j-1].append(old_leaf[j-1])
 
         address.append(0)
-<<<<<<< HEAD
     
     # Get zk proof and merkle root
-=======
-
->>>>>>> Add volumes to docker-compose for test editing
     proof, root = genWitness(leaves, pub_x, pub_y, address, tree_depth, 
                                 rhs_leaf, new_leaf , R_x, R_y, S)              
-
-
-
 
     proof["a"] = hex2int(proof["a"])
     proof["a_p"] = hex2int(proof["a_p"])
@@ -143,7 +136,6 @@ if __name__ == "__main__":
     proof["h"] = hex2int(proof["h"])
     proof["k"] = hex2int(proof["k"])
     proof["input"] = hex2int(proof["input"]) 
-
 
 
     #root , merkle_tree = utils.genMerkelTree(tree_depth, leaves[0])
