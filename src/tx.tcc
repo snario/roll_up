@@ -80,12 +80,18 @@ namespace libsnark {
         input_variable.reset(new block_variable<FieldT>(pb, {pub_key_x_bin, pub_key_y_bin}, "input_variable")); 
         input_variable2.reset(new block_variable<FieldT>(pb, {lhs_leaf->bits, rhs_leaf}, "input_variable"));
 
+        // Use sha256_ethereum gadget instead of libsnark's sha256_compression_function gadget
+        // sha256_ethereum gadget appends a block at the end with the length of the input data to
+        // defend against length extension attacks
+        // sha256_ethereum basically uses sha256_compression_function under the hood, but incorporates
+        // the extra defense against length extension attacks
 
         public_key_hash.reset(new sha256_ethereum(pb, 256, *input_variable, *lhs_leaf, "pub key hash"));
         leaf_hash.reset(new sha256_ethereum(pb, 256, *input_variable2, *leaf, "pub key hash"));
         input_variable3.reset(new block_variable<FieldT>(pb, {leaf->bits, new_leaf->bits}, "input_variable"));
         message_hash.reset(new sha256_ethereum(pb, 256, *input_variable3, *message, "pub key hash"));
 
+        // Use packer gadget to convert series of bits into field elements
 
         unpacker_pub_key_x.reset(new multipacking_gadget<FieldT>(
             pb,
@@ -107,26 +113,43 @@ namespace libsnark {
         path_var_new.reset(new merkle_authentication_path_variable<FieldT, HashT> (pb, tree_depth, "path_var" ));
 
         ml.reset(new merkle_tree_check_update_gadget<FieldT, HashT>(pb, tree_depth, address_bits_va, *leaf, *root_digest_old, *path_var_old, *new_leaf, *root_digest_new, *path_var_new, ONE, "ml"));
+        
+        // a,d, base_x & base_y are constants for Ed25519 curve
+        // r_x_bin, r_y_bin & R are signature variables
+        // pub_key_x_bin & pub_key_y_bin are public key values
+        // message is the message that was signed
         jubjub_eddsa.reset(new eddsa<FieldT, HashT> (pb,a,d, pub_key_x_bin, pub_key_y_bin, base_x,base_y,r_x_bin, r_y_bin, message->bits, S));
     }
 
     template<typename FieldT, typename HashT>
     void tx<FieldT, HashT>::generate_r1cs_constraints() { 
+
+        // Constraints that validate signature for the given pubKey and message
         jubjub_eddsa->generate_r1cs_constraints();
-       
+    
+        // Verify that the pubkey digest is correct
         public_key_hash->generate_r1cs_constraints(true);
+
+        // Verify that the leaf digest is correct
         leaf_hash->generate_r1cs_constraints(true);
 
+        // Verify that the message digest is correct
         message_hash->generate_r1cs_constraints(true);
 
+        // Pack the bits of pub_key_x into a field element
         unpacker_pub_key_x->generate_r1cs_constraints(true);
+        // Pack the bits of pub_key_y into a field element
         unpacker_pub_key_y->generate_r1cs_constraints(true);
 
+        // Check that all the digests in paths are valid 256 bits variable
         path_var_old->generate_r1cs_constraints();
         path_var_new->generate_r1cs_constraints();
 
+        // Check that root digests are valid 256 bits variables
         root_digest_old->generate_r1cs_constraints();
         root_digest_new->generate_r1cs_constraints();
+
+        // Checks that both old leaf and new leaf values have valid paths to the old and new root
         ml->generate_r1cs_constraints();   
 
         //make sure the traget root matched the calculated root
