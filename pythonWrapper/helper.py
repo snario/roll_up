@@ -34,7 +34,7 @@ from utils import libsnark2python
 
 tree_depth = 1
 noTx = 2
-lib = cdll.LoadLibrary('../build/src/libroll_up_wrapper.so')
+lib = cdll.LoadLibrary('/root/roll_up/build/src/libroll_up_wrapper.so') # TODO Change to env var
 
 
 prove = lib.prove
