@@ -94,7 +94,7 @@ contract Verifier {
             vk.A, 
             Pairing.negate(proof.A_p), 
             Pairing.P2()
-        )
+        );
         if (!pairing) { return 1; }
 
         pairing = Pairing.pairingProd2(
@@ -102,7 +102,7 @@ contract Verifier {
             proof.B, 
             Pairing.negate(proof.B_p), 
             Pairing.P2()
-        )
+        );
         if (!pairing) { return 2; }
 
         pairing = Pairing.pairingProd2(
@@ -110,7 +110,7 @@ contract Verifier {
             vk.C, 
             Pairing.negate(proof.C_p), 
             Pairing.P2()
-        )
+        );
         if (!pairing) { return 3; }
 
 
@@ -123,7 +123,7 @@ contract Verifier {
             vk.gammaBeta2,
             Pairing.negate(vk.gammaBeta1), 
             proof.B
-        ) 
+        );
         if (!pairing) return 4;
 
         pairing = Pairing.pairingProd3(
@@ -133,7 +133,7 @@ contract Verifier {
                 vk.Z,
                 Pairing.negate(proof.C), 
                 Pairing.P2()
-        )
+        );
         if (!pairing) { return 5; } 
         return 0;
     }
