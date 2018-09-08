@@ -10,11 +10,14 @@ RUN apt-get update && \
 
 WORKDIR /root/roll_up
 
-COPY . .
+COPY requirements.txt /root/roll_up/requirements.txt
+RUN pip3 install -r /root/roll_up/requirements.txt
 
-RUN pip3 install -r requirements.txt
-
-RUN cd build \
+COPY depends depends
+COPY src src
+COPY CMakeLists.txt .
+RUN mkdir -p build \
+    && cd build \
     && cmake .. \
     && make \
     && DESTDIR=/usr/local make install \
@@ -23,5 +26,7 @@ RUN cd build \
         NO_DOCS=1 \
         CURVE=ALT_BN128 \
         FEATUREFLAGS="-DBINARY_OUTPUT=1 -DMONTGOMERY_OUTPUT=1 -DNO_PT_COMPRESSION=1"
+
+COPY . .
 
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/usr/local/lib
