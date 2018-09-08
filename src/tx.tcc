@@ -107,26 +107,42 @@ namespace libsnark {
         path_var_new.reset(new merkle_authentication_path_variable<FieldT, HashT> (pb, tree_depth, "path_var" ));
 
         ml.reset(new merkle_tree_check_update_gadget<FieldT, HashT>(pb, tree_depth, address_bits_va, *leaf, *root_digest_old, *path_var_old, *new_leaf, *root_digest_new, *path_var_new, ONE, "ml"));
+        
+        // a,d, base_x & base_y are constants for Ed25519 curve
+        // r_x_bin, r_y_bin & R are signature variables
+        // pub_key_x_bin & pub_key_y_bin are public key values
+        // message is the message that was signed
         jubjub_eddsa.reset(new eddsa<FieldT, HashT> (pb,a,d, pub_key_x_bin, pub_key_y_bin, base_x,base_y,r_x_bin, r_y_bin, message->bits, S));
     }
 
     template<typename FieldT, typename HashT>
     void tx<FieldT, HashT>::generate_r1cs_constraints() { 
+
+        // Constraints that validate signature for the given pubKey and message
         jubjub_eddsa->generate_r1cs_constraints();
-       
+    
+        // Verify that the pubkey digest is correct
         public_key_hash->generate_r1cs_constraints(true);
+
+        // Verify that the leaf digest is correct
         leaf_hash->generate_r1cs_constraints(true);
 
+        // Verify that the message digest is correct
         message_hash->generate_r1cs_constraints(true);
 
+        // Packed pub key contraints ??
         unpacker_pub_key_x->generate_r1cs_constraints(true);
         unpacker_pub_key_y->generate_r1cs_constraints(true);
 
+        // Check that all the digests in paths are valid 256 bits variable
         path_var_old->generate_r1cs_constraints();
         path_var_new->generate_r1cs_constraints();
 
+        // Check that root digests are valid 256 bits variables
         root_digest_old->generate_r1cs_constraints();
         root_digest_new->generate_r1cs_constraints();
+
+        // Checks that both old leaf and new leaf values have valid paths to the old and new root
         ml->generate_r1cs_constraints();   
 
         //make sure the traget root matched the calculated root
