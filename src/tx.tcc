@@ -80,12 +80,18 @@ namespace libsnark {
         input_variable.reset(new block_variable<FieldT>(pb, {pub_key_x_bin, pub_key_y_bin}, "input_variable")); 
         input_variable2.reset(new block_variable<FieldT>(pb, {lhs_leaf->bits, rhs_leaf}, "input_variable"));
 
+        // Use sha256_ethereum gadget instead of libsnark's sha256_compression_function gadget
+        // sha256_ethereum gadget appends a block at the end with the length of the input data to
+        // defend against length extension attacks
+        // sha256_ethereum basically uses sha256_compression_function under the hood, but incorporates
+        // the extra defense against length extension attacks
 
         public_key_hash.reset(new sha256_ethereum(pb, 256, *input_variable, *lhs_leaf, "pub key hash"));
         leaf_hash.reset(new sha256_ethereum(pb, 256, *input_variable2, *leaf, "pub key hash"));
         input_variable3.reset(new block_variable<FieldT>(pb, {leaf->bits, new_leaf->bits}, "input_variable"));
         message_hash.reset(new sha256_ethereum(pb, 256, *input_variable3, *message, "pub key hash"));
 
+        // Use packer gadget to convert series of bits into field elements
 
         unpacker_pub_key_x.reset(new multipacking_gadget<FieldT>(
             pb,
@@ -130,8 +136,9 @@ namespace libsnark {
         // Verify that the message digest is correct
         message_hash->generate_r1cs_constraints(true);
 
-        // Packed pub key contraints ??
+        // Pack the bits of pub_key_x into a field element
         unpacker_pub_key_x->generate_r1cs_constraints(true);
+        // Pack the bits of pub_key_y into a field element
         unpacker_pub_key_y->generate_r1cs_constraints(true);
 
         // Check that all the digests in paths are valid 256 bits variable
