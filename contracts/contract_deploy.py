@@ -45,12 +45,14 @@ def compile(tree_depth):
     return(miximus_interface, verifier_interface)
    
 
-def contract_deploy(tree_depth, vk_dir, merkle_root, host="localhost"):
-    w3 = Web3(HTTPProvider(f"http://{host}:8545"))
+def contract_deploy(tree_depth, vk_dir, merkle_root, host="localhost",
+port="8545"):
+    w3 = Web3(HTTPProvider(f"http://{host}:{port}"))
 
     miximus_interface , verifier_interface  = compile(tree_depth)
     with open(vk_dir) as json_data:
         vk = json.load(json_data)
+        print(vk)
 
 
     vk  = [hex2int(vk["a"][0]),

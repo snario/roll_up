@@ -47,7 +47,7 @@ contract Verifier {
         uint[2] C2,
         uint[2] gamma1,
         uint[2] gamma2,
-        uint[2] gammaBeta1, 
+        uint[2] gam maBeta1, 
         uint[2] gammaBeta2_1,
         uint[2] gammaBeta2_2,
         uint[2] Z1,
@@ -207,5 +207,12 @@ contract Verifier {
             inputValues[i] = input[i];
         }
 
-        } 
+        if (verify(inputValues, proof) == 0) {
+            Verified("Transaction successfully verified.");
+            return true;
+        } else {
+            return false;
+        }
+
+
 }
